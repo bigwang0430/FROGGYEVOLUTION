@@ -1,26 +1,25 @@
 package deprs;
 
+import static org.firstinspires.ftc.teamcode.pedroPathing.Tuning.follower;
+
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
+import com.pedropathing.math.MathFunctions;
+import com.pedropathing.math.Vector;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.Gamepad;
-import com.qualcomm.robotcore.hardware.HardwareMap;
-import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.seattlesolvers.solverslib.controller.PIDController;
-import com.seattlesolvers.solverslib.controller.PIDFController;
-import com.seattlesolvers.solverslib.controller.SquIDFController;
 import com.seattlesolvers.solverslib.gamepad.GamepadEx;
-import com.seattlesolvers.solverslib.gamepad.GamepadKeys;
 import com.seattlesolvers.solverslib.hardware.motors.Motor;
-import com.seattlesolvers.solverslib.hardware.motors.MotorEx;
 
 import org.firstinspires.ftc.teamcode.globals;
 
 
-@TeleOp(name = "launch")
-public class launcher extends OpMode {
+@TeleOp(name = "newLaunch")
+public class newLaunch extends OpMode {
+    private Vector robotToGoal;
+    private double hoodAngle, turretAng, turretOffset;
     private Motor launch1, launch2;
     private int lastPosition;
     private double lastTime;
@@ -30,7 +29,7 @@ public class launcher extends OpMode {
     private PIDController launchPIDF = new PIDController(globals.launcher.p, globals.launcher.i, globals.launcher.d);
     private ElapsedTime timer = new ElapsedTime();
     private double launchRPM;
-    private SquIDFController launchSQUIDF = new SquIDFController(globals.launcher.squP, globals.launcher.squI, globals.launcher.squD, globals.launcher.squKv * globals.launcher.targetRPM + globals.launcher.squKs);
+    private double flywheelSpeed;
     @Override
     public void init() {
         launch1 = new Motor(hardwareMap, "launch1", 28, 6000);
@@ -43,40 +42,31 @@ public class launcher extends OpMode {
         launch2.setZeroPowerBehavior(Motor.ZeroPowerBehavior.FLOAT);
 
         g1 = new GamepadEx(gamepad1);
-        launchSQUIDF.setTolerance(20);
+
         launchPIDF.setTolerance(20);
     }
 
     @Override
     public void loop() {
-        telemetry.update();
-
+        RPM();
+        shotVector();
         launchPIDF.setPID(globals.launcher.p, globals.launcher.i, globals.launcher.d);
-        launchSQUIDF.setPIDF(globals.launcher.squP, globals.launcher.squI, globals.launcher.squD, globals.launcher.squKv * globals.launcher.targetRPM + globals.launcher.squKs);
-        if (!globals.launcher.SquidOn) {
-            launchPIDF.setSetPoint(globals.launcher.targetRPM);
-            launchpower = launchPIDF.calculate(RPM);
-        } else {
-            launchSQUIDF.setSetPoint(globals.launcher.targetRPM);
-            launchpower = launchSQUIDF.calculate(RPM);
-        }
+        launchPIDF.setSetPoint(setRPM(flywheelSpeed));
+        launchpower = launchPIDF.calculate(RPM);
 
+        robotToGoal = shooterConstants.blueGoal.getAsVector().minus(follower.getPose().getAsVector());
         if (globals.launcher.launcherOn) {
-            launch1.set(launchpower + globals.launcher.kv * globals.launcher.targetRPM + globals.launcher.ks);
-            launch2.set(launchpower + globals.launcher.kv * globals.launcher.targetRPM + globals.launcher.ks);
+            launch1.set(launchpower + globals.launcher.kv * setRPM(flywheelSpeed) + globals.launcher.ks);
+            launch2.set(launchpower + globals.launcher.kv * setRPM(flywheelSpeed) + globals.launcher.ks);
         } else {
             launch1.set(0);
             launch2.set(0);
         }
-        RPM();
 
         if (Math.abs(previousRPM - RPM )> 300) {
             launchRPM = previousRPM;
         }
-
-        telemetry.addData("loop time", timer.seconds());
-        timer.reset();
-        telemetry.addData("at speed", globals.launcher.SquidOn ? launchSQUIDF.atSetPoint() : launchPIDF.atSetPoint());
+        telemetry.addData("at speed", launchPIDF.atSetPoint());
         telemetry.addData("target", globals.launcher.targetRPM);
         telemetry.addData("rpm", RPM);
         telemetry.addData("power", launchpower);
@@ -90,6 +80,7 @@ public class launcher extends OpMode {
 
         FtcDashboard.getInstance().sendTelemetryPacket(powerPacket);
         FtcDashboard.getInstance().sendTelemetryPacket(rpmPacket);
+        telemetry.update();
     }
     public void RPM() {
         if (rpmDist >= 10) {
@@ -112,4 +103,43 @@ public class launcher extends OpMode {
             lastPosition = currentPosition;
         }
     }
+
+    private void shotVector() {
+        double g = 386.09; // inch/s
+        double robotHeading = follower.getHeading();
+        double x = robotToGoal.getMagnitude() - shooterConstants.passThroughDist;
+        double y = shooterConstants.scoreHeight;
+        double a = shooterConstants.scoreAngle;
+
+        hoodAngle = MathFunctions.clamp(Math.atan(2 * y / x - Math.tan(a)), shooterConstants.maxHood, shooterConstants.minHood);
+        flywheelSpeed = Math.sqrt(g * x * x / (2 * Math.pow(Math.cos(hoodAngle), 2) * (x * Math.tan(hoodAngle) - y)));
+
+        Vector robotVelocity = follower.getVelocity();
+
+        double coordinateTheta = robotVelocity.getTheta() - robotToGoal.getTheta();
+        double tangentVelocity = Math.cos(coordinateTheta) * robotVelocity.getMagnitude();
+        double normalVelocity = Math.sin(coordinateTheta) * robotVelocity.getMagnitude();
+
+        double verticalVelocoty = flywheelSpeed * Math.sin(hoodAngle);
+        double time = x / (flywheelSpeed * Math.cos(hoodAngle));
+        double ivr = x / time * tangentVelocity;
+        double nvr = Math.sqrt(ivr * ivr + normalVelocity * normalVelocity);
+        double ndr = nvr * time;
+
+        hoodAngle = MathFunctions.clamp(Math.atan(verticalVelocoty / nvr), shooterConstants.maxHood, shooterConstants.minHood);
+
+        flywheelSpeed = Math.sqrt(g * ndr * ndr / (2 * Math.pow(Math.cos(hoodAngle), 2) * (ndr * Math.tan(hoodAngle) - y)));
+
+        turretOffset = Math.atan(normalVelocity / ivr);
+        turretAng = Math.toDegrees(robotHeading - robotToGoal.getTheta() + turretOffset);
+    }
+
+    private double setHood(double hood) {
+        return hood;
+    }
+    private double setRPM(double velocity) {
+        // Given a specific velocity, provide an RPM
+        return velocity;
+    }
+
 }
