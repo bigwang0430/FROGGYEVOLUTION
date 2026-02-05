@@ -23,6 +23,7 @@ public class Constants {
             .useSecondaryTranslationalPIDF(true)
             .useSecondaryHeadingPIDF(true)
 
+            //translational f is 0.05 p is alos 0.05
             ;
 
     public static PinpointConstants localizerConstants = new PinpointConstants()
