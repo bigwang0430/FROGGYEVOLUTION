@@ -1,4 +1,4 @@
-package deprs;
+package org.firstinspires.ftc.teamcode.deprs;
 
 import static org.firstinspires.ftc.teamcode.pedroPathing.Tuning.follower;
 

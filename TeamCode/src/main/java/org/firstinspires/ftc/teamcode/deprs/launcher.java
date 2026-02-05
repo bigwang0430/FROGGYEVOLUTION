@@ -1,4 +1,4 @@
-package deprs;
+package org.firstinspires.ftc.teamcode.deprs;
 
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
