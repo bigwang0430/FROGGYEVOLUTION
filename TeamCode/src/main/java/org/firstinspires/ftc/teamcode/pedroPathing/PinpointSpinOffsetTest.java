@@ -18,11 +18,11 @@ public class PinpointSpinOffsetTest extends LinearOpMode {
     // X offset = LEFT/RIGHT of the FORWARD-tracking (X) pod. Left +, Right -
     // Y offset = FORWARD/BACK of the STRAFE-tracking (Y) pod. Forward +, Back -
     private static final double X_POD_OFFSET_MM = -157.5;
-    private static final double Y_POD_OFFSET_MM = -192.0;
+    private static final double Y_POD_OFFSET_MM = -194.0;
 
     // Spin behavior
     private static final double SPIN_POWER = 0.40;      // 0.30–0.50 typical
-    private static final double TEST_TIMEOUT_S = 15.0;  // give it time to reach 360
+    private static final double TEST_TIMEOUT_S = 16.0;  // give it time to reach 360
     private static final double TARGET_DEG = 360.0;     // one full revolution
 
     // Stop when close enough (degrees)
