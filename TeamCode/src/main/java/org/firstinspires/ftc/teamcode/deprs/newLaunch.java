@@ -2,10 +2,13 @@ package org.firstinspires.ftc.teamcode.deprs;
 
 import static org.firstinspires.ftc.teamcode.pedroPathing.Tuning.follower;
 
+import static java.lang.Thread.sleep;
+
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.pedropathing.math.MathFunctions;
 import com.pedropathing.math.Vector;
+import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -32,6 +35,9 @@ public class newLaunch extends OpMode {
     private double flywheelSpeed;
     @Override
     public void init() {
+        GoBildaPinpointDriver pinpoint = hardwareMap.get(GoBildaPinpointDriver.class, "pinpoint");
+        pinpoint.resetPosAndIMU();
+
         launch1 = new Motor(hardwareMap, "launch1", 28, 6000);
         launch2 = new Motor(hardwareMap, "launch2", 28, 6000);
         launch1.setRunMode(Motor.RunMode.RawPower);
