@@ -15,7 +15,9 @@ import com.seattlesolvers.solverslib.gamepad.GamepadEx;
 import com.seattlesolvers.solverslib.gamepad.GamepadKeys;
 import com.seattlesolvers.solverslib.hardware.motors.Motor;
 import com.seattlesolvers.solverslib.hardware.motors.MotorEx;
+import com.seattlesolvers.solverslib.hardware.servos.ServoEx;
 
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.globals;
 
 
@@ -30,6 +32,7 @@ public class launcher extends OpMode {
     private PIDController launchPIDF = new PIDController(globals.launcher.p, globals.launcher.i, globals.launcher.d);
     private ElapsedTime timer = new ElapsedTime();
     private double launchRPM;
+    private ServoEx t1, hood;
     private SquIDFController launchSQUIDF = new SquIDFController(globals.launcher.squP, globals.launcher.squI, globals.launcher.squD, globals.launcher.squKv * globals.launcher.targetRPM + globals.launcher.squKs);
     @Override
     public void init() {
@@ -37,8 +40,8 @@ public class launcher extends OpMode {
         launch2 = new Motor(hardwareMap, "launch2", 28, 6000);
         launch1.setRunMode(Motor.RunMode.RawPower);
         launch2.setRunMode(Motor.RunMode.RawPower);
-        launch2.setInverted(false);
-        launch1.setInverted(true);
+        launch2.setInverted(true);
+        launch1.setInverted(false);
         launch1.setZeroPowerBehavior(Motor.ZeroPowerBehavior.FLOAT);
         launch2.setZeroPowerBehavior(Motor.ZeroPowerBehavior.FLOAT);
 
@@ -48,6 +51,11 @@ public class launcher extends OpMode {
         transfer.setRunMode(Motor.RunMode.RawPower);
         intake.setZeroPowerBehavior(Motor.ZeroPowerBehavior.FLOAT);
         transfer.setZeroPowerBehavior(Motor.ZeroPowerBehavior.FLOAT);
+        t1 = new ServoEx(hardwareMap, "t1", 360, AngleUnit.DEGREES);
+        t1.set(180);
+
+        hood = new ServoEx(hardwareMap, "hood", 300, AngleUnit.DEGREES);
+        hood.set(globals.launcher.hoodAng);
 
 
 
@@ -58,22 +66,26 @@ public class launcher extends OpMode {
 
     @Override
     public void loop() {
+        hood.set(globals.launcher.hoodAng);
         telemetry.update();
 
         launchPIDF.setPID(globals.launcher.p, globals.launcher.i, globals.launcher.d);
         launchPIDF.setSetPoint(globals.launcher.targetRPM);
         launchpower = launchPIDF.calculate(RPM);
 
-        if (globals.launcher.launcherOn) {
+        if (g1.getButton(GamepadKeys.Button.CROSS)) {
             launch1.set(launchpower + globals.launcher.kv * globals.launcher.targetRPM + globals.launcher.ks);
             launch2.set(launchpower + globals.launcher.kv * globals.launcher.targetRPM + globals.launcher.ks);
-          //if (launchPIDF.atSetPoint()){
+          if (launchPIDF.atSetPoint()){
             intake.set(1);
             transfer.set(1);
-          //}
+          }
         } else {
             launch1.set(0);
             launch2.set(0);
+            intake.set(0);
+            transfer.set(0);
+
         }
 
         if (g1.getButton(GamepadKeys.Button.TRIANGLE)) {
@@ -81,16 +93,17 @@ public class launcher extends OpMode {
             transfer.set(0.2);
         }
 
-        if (!g1.getButton(GamepadKeys.Button.TRIANGLE) && !g1.getButton(GamepadKeys.Button.CROSS)) {
-            intake.set(0);
-            transfer.set(0);
-        }
+//        if (!g1.getButton(GamepadKeys.Button.TRIANGLE) && !g1.getButton(GamepadKeys.Button.CROSS)) {
+//            intake.set(0);
+//            transfer.set(0);
+//        }
         RPM();
 
         if (Math.abs(previousRPM - RPM )> 300) {
             launchRPM = previousRPM;
         }
 
+        telemetry.addData("hood ang", globals.launcher.hoodAng +30);
         telemetry.addData("loop time", timer.seconds());
         timer.reset();
         telemetry.addData("at speed", globals.launcher.SquidOn ? launchSQUIDF.atSetPoint() : launchPIDF.atSetPoint());

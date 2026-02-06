@@ -10,9 +10,9 @@ public class shooterConstants {
     public static double scoreAngle = Math.toRadians(-30);
     public static double passThroughDist = 5;
 
-    public static double maxHood = 10;
-    public static double minHood = 10;
+    public static double maxHood = 0;
+    public static double minHood = 200;
 
-    public static double maxRPM = 5500;
+    public static double maxRPM = 4000;
     public static double minRPM = 0;
 }
