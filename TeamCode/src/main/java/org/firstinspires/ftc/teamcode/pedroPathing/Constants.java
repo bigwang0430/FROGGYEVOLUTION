@@ -33,6 +33,7 @@ public class Constants {
 
             .drivePIDFCoefficients(new FilteredPIDFCoefficients(0.005, 0, 0.0001, 0.025, 0.4))
 
+            .centripetalScaling(0.001)
             ;
 
     public static PinpointConstants localizerConstants = new PinpointConstants()
@@ -57,6 +58,7 @@ public class Constants {
 
             .xVelocity(62)
             .yVelocity(51)
+
 
             ;
 
