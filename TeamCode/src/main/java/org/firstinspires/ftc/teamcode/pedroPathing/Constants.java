@@ -20,7 +20,7 @@ public class Constants {
             .forwardZeroPowerAcceleration(-100)
             .lateralZeroPowerAcceleration(-110)
 
-            .useSecondaryDrivePIDF(true)
+            .useSecondaryDrivePIDF(false)
             .useSecondaryTranslationalPIDF(true)
             .useSecondaryHeadingPIDF(true)
 
