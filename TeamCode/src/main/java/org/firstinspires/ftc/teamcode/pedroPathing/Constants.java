@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.pedroPathing;
 
+import com.pedropathing.control.PIDFCoefficients;
 import com.pedropathing.follower.Follower;
 import com.pedropathing.follower.FollowerConstants;
 import com.pedropathing.ftc.FollowerBuilder;
@@ -23,7 +24,11 @@ public class Constants {
             .useSecondaryTranslationalPIDF(true)
             .useSecondaryHeadingPIDF(true)
 
-            //translational f is 0.05 p is alos 0.05
+            .translationalPIDFCoefficients(new PIDFCoefficients(0.061, 0, 0.00001, 0.025))
+            .secondaryTranslationalPIDFCoefficients(new PIDFCoefficients(8, 8, 0.000001, 0.025))
+
+            .headingPIDFCoefficients(new PIDFCoefficients(0.9, 0, 0.001, 0.035))
+            .secondaryHeadingPIDFCoefficients(new PIDFCoefficients(7, 0, 0.0001, 0.04))
             ;
 
     public static PinpointConstants localizerConstants = new PinpointConstants()
