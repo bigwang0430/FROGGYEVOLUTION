@@ -28,6 +28,9 @@ import com.seattlesolvers.solverslib.pedroCommand.FollowPathCommand;
 import com.seattlesolvers.solverslib.pedroCommand.HoldPointCommand;
 import com.seattlesolvers.solverslib.util.TelemetryData;
 import com.skeletonarmy.marrow.TimerEx;
+import com.acmerobotics.dashboard.FtcDashboard;
+import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
+
 import com.seattlesolvers.solverslib.hardware.servos.ServoEx;
 //import com.skeletonarmy.marrow.TimerEx;
 
@@ -73,13 +76,15 @@ public class FROGTONOMOUSTRACKING extends CommandOpMode {
     //SUBSYSTEMS
     public class visionsubsys extends SubsystemBase {
         private Limelight3A limelight;
-        private double numspeed = 0.3;
+        private double numspeed = 0.4;
         private Motor fl, bl, fr, br;
 
         public visionsubsys(HardwareMap map) {
             limelight = map.get(Limelight3A.class, "limelight");
             limelight.setPollRateHz(50);
             limelight.start();
+
+            FtcDashboard.getInstance().startCameraStream(limelight, 30);
 
             limelight.pipelineSwitch(2);
 
@@ -109,29 +114,31 @@ public class FROGTONOMOUSTRACKING extends CommandOpMode {
         public void balltracking() {
             LLResult result = limelight.getLatestResult();
             if (result == null || !result.isValid() || result.getStaleness() >= 300) {
+                strafe(0);
                 return;
             }
 
             List<LLResultTypes.ColorResult> balls = result.getColorResults();
             if (balls == null || balls.isEmpty()) {
+                strafe(0);
                 return;
             }
 
             LLResultTypes.ColorResult ball = balls.get(0);
 
             double txPx = ball.getTargetXPixels(); // pixels from crosshair (can be +/-)
-            if (txPx > 20) {
+            if (txPx > 170) {
                 strafe(+1);
-            } else if (txPx < -20) {
+            } else if (txPx < 150) {
                 strafe(-1);
             } else {
                 strafe(0);
                 hunted = true;
             }
 
-            telemetryData.addData("hunted", hunted);
-            telemetryData.addData("tx", txPx);
-            telemetryData.update();
+            telemetry.addData("hunted", hunted);
+            telemetry.addData("tx", txPx);
+            telemetry.update();
         }
 
         public void strafe(int num) {
@@ -139,6 +146,13 @@ public class FROGTONOMOUSTRACKING extends CommandOpMode {
             fr.set(-num*numspeed);
             bl.set(-num*numspeed);
             br.set(num*numspeed);
+        }
+
+        public boolean done() {
+            if (hunted){
+                return  true;
+            }
+            return false;
         }
     }
 
@@ -156,12 +170,20 @@ public class FROGTONOMOUSTRACKING extends CommandOpMode {
         public void execute() {
             visionsubsystem.balltracking();
         }
+
+        @Override
+        public boolean isFinished(){
+            return visionsubsystem.done();
+        }
     }
 
 
 
     @Override
     public void initialize() {
+        telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
+
+
         visionsubsys visionsubsystem = new visionsubsys(hardwareMap);
 
         timer.start();
@@ -186,14 +208,6 @@ public class FROGTONOMOUSTRACKING extends CommandOpMode {
     public void run() {
         super.run();
         follower.update();
-
-        telemetryData.addData("X", follower.getPose().getX());
-        telemetryData.addData("Y", follower.getPose().getY());
-        telemetryData.addData("Heading", follower.getPose().getHeading());
-        telemetryData.addData("balls", balls);
-        telemetryData.addData("patt", pattern);
-        telemetryData.update();
-
     }
 }
 
