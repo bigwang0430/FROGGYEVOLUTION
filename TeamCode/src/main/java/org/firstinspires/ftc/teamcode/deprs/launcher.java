@@ -21,7 +21,7 @@ import org.firstinspires.ftc.teamcode.globals;
 
 @TeleOp(name = "launch")
 public class launcher extends OpMode {
-    private Motor launch1, launch2;
+    private Motor launch1, launch2, intake, transfer;
     private int lastPosition;
     private double lastTime;
     private GamepadEx g1;
@@ -42,9 +42,18 @@ public class launcher extends OpMode {
         launch1.setZeroPowerBehavior(Motor.ZeroPowerBehavior.FLOAT);
         launch2.setZeroPowerBehavior(Motor.ZeroPowerBehavior.FLOAT);
 
+        intake = new Motor(hardwareMap, "spindexer");
+        transfer = new Motor(hardwareMap, "intake");
+        intake.setRunMode(Motor.RunMode.RawPower);
+        transfer.setRunMode(Motor.RunMode.RawPower);
+        intake.setZeroPowerBehavior(Motor.ZeroPowerBehavior.FLOAT);
+        transfer.setZeroPowerBehavior(Motor.ZeroPowerBehavior.FLOAT);
+
+
+
         g1 = new GamepadEx(gamepad1);
         launchSQUIDF.setTolerance(20);
-        launchPIDF.setTolerance(20);
+        launchPIDF.setTolerance(50);
     }
 
     @Override
@@ -52,21 +61,29 @@ public class launcher extends OpMode {
         telemetry.update();
 
         launchPIDF.setPID(globals.launcher.p, globals.launcher.i, globals.launcher.d);
-        launchSQUIDF.setPIDF(globals.launcher.squP, globals.launcher.squI, globals.launcher.squD, globals.launcher.squKv * globals.launcher.targetRPM + globals.launcher.squKs);
-        if (!globals.launcher.SquidOn) {
-            launchPIDF.setSetPoint(globals.launcher.targetRPM);
-            launchpower = launchPIDF.calculate(RPM);
-        } else {
-            launchSQUIDF.setSetPoint(globals.launcher.targetRPM);
-            launchpower = launchSQUIDF.calculate(RPM);
-        }
+        launchPIDF.setSetPoint(globals.launcher.targetRPM);
+        launchpower = launchPIDF.calculate(RPM);
 
         if (globals.launcher.launcherOn) {
             launch1.set(launchpower + globals.launcher.kv * globals.launcher.targetRPM + globals.launcher.ks);
             launch2.set(launchpower + globals.launcher.kv * globals.launcher.targetRPM + globals.launcher.ks);
+          //if (launchPIDF.atSetPoint()){
+            intake.set(1);
+            transfer.set(1);
+          //}
         } else {
             launch1.set(0);
             launch2.set(0);
+        }
+
+        if (g1.getButton(GamepadKeys.Button.TRIANGLE)) {
+            intake.set(1);
+            transfer.set(0.2);
+        }
+
+        if (!g1.getButton(GamepadKeys.Button.TRIANGLE) && !g1.getButton(GamepadKeys.Button.CROSS)) {
+            intake.set(0);
+            transfer.set(0);
         }
         RPM();
 
