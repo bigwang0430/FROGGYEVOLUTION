@@ -73,7 +73,7 @@ public class FROGTONOMOUSTRACKING extends CommandOpMode {
     //SUBSYSTEMS
     public class visionsubsys extends SubsystemBase {
         private Limelight3A limelight;
-        private double numspeed = 0.1;
+        private double numspeed = 0.3;
         private Motor fl, bl, fr, br;
 
         public visionsubsys(HardwareMap map) {
