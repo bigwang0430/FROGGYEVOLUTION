@@ -51,7 +51,7 @@ public class FROGTONOMOUSTRACKING extends CommandOpMode {
     private Follower follower;
     TelemetryData telemetryData = new TelemetryData(telemetry);
     public String pattern = "ppg";
-    public PathChain Path1, Path2, Path3, Path4, Path5, Path6, Path7, Path8, Path9, Path10, Path11;
+    public PathChain path1, Path2, Path3, Path4, Path5, Path6, Path7, Path8, Path9, Path10, Path11;
     public TimerEx intaketimer = new TimerEx(30);
     public TimerEx timer = new TimerEx(30);
     public TimerEx launchTimer = new TimerEx(30);
@@ -59,18 +59,21 @@ public class FROGTONOMOUSTRACKING extends CommandOpMode {
     public double sdxPower = 0.0;
     public int launchnum = 0;
     public double target = 0.0;
-    private enum sdxCase {
-        spinUp,
-        launch3Slow,
-        launch3Fast,
-        resetSpindexer
-    } sdxCase sdxState = sdxCase.spinUp;
 
     public boolean hunted = false;
 
 
     //PATHS
+    public void buildPaths() {
+        path1 = follower.pathBuilder().addPath(
+                new BezierLine(
+                        new Pose(24.000, 130.000),
 
+                        new Pose(49.000, 84.000)
+                )
+                ).setLinearHeadingInterpolation(-127, 180)
+                .build();
+    }
     //FUNCTIONS
 
     //SUBSYSTEMS
@@ -193,9 +196,12 @@ public class FROGTONOMOUSTRACKING extends CommandOpMode {
         sleep(1000);
 
         follower = Constants.createFollower(hardwareMap);
-        follower.setStartingPose(new Pose(72, 72, Math.toRadians(180)));//todo
+        follower.setStartingPose(new Pose(20.785, 126.206, Math.toRadians(-127)));//todo
+
+        buildPaths();
 
         SequentialCommandGroup froggyroute = new SequentialCommandGroup(
+                new FollowPathCommand(follower, path1),
             new froggyhunting(visionsubsystem)
         );
 
