@@ -33,7 +33,7 @@ public class launcher extends OpMode {
     private ElapsedTime timer = new ElapsedTime();
     private double launchRPM;
     private ServoEx t1, hood;
-    private SquIDFController launchSQUIDF = new SquIDFController(globals.launcher.squP, globals.launcher.squI, globals.launcher.squD, globals.launcher.squKv * globals.launcher.targetRPM + globals.launcher.squKs);
+    private SquIDFController launchSQUIDF = new SquIDFController(globals.launcher.squP, globals.launcher.squI, globals.launcher.squD, globals.launcher.squKv * globals.testing.targetRPM + globals.launcher.squKs);
     @Override
     public void init() {
         launch1 = new Motor(hardwareMap, "launch1", 28, 6000);
@@ -55,7 +55,7 @@ public class launcher extends OpMode {
         t1.set(180);
 
         hood = new ServoEx(hardwareMap, "hood", 300, AngleUnit.DEGREES);
-        hood.set(globals.launcher.hoodAng);
+        hood.set(globals.testing.hoodAng);
 
 
 
@@ -66,16 +66,16 @@ public class launcher extends OpMode {
 
     @Override
     public void loop() {
-        hood.set(globals.launcher.hoodAng);
+        hood.set(globals.testing.hoodAng);
         telemetry.update();
 
         launchPIDF.setPID(globals.launcher.p, globals.launcher.i, globals.launcher.d);
-        launchPIDF.setSetPoint(globals.launcher.targetRPM);
+        launchPIDF.setSetPoint(globals.testing.targetRPM);
         launchpower = launchPIDF.calculate(RPM);
 
         if (g1.getButton(GamepadKeys.Button.CROSS)) {
-            launch1.set(launchpower + globals.launcher.kv * globals.launcher.targetRPM + globals.launcher.ks);
-            launch2.set(launchpower + globals.launcher.kv * globals.launcher.targetRPM + globals.launcher.ks);
+            launch1.set(launchpower + globals.launcher.kv * globals.testing.targetRPM + globals.launcher.ks);
+            launch2.set(launchpower + globals.launcher.kv * globals.testing.targetRPM + globals.launcher.ks);
           if (launchPIDF.atSetPoint()){
             intake.set(1);
             transfer.set(1);
@@ -103,11 +103,11 @@ public class launcher extends OpMode {
             launchRPM = previousRPM;
         }
 
-        telemetry.addData("hood ang", globals.launcher.hoodAng +30);
+        telemetry.addData("hood ang", globals.testing.hoodAng +30);
         telemetry.addData("loop time", timer.seconds());
         timer.reset();
-        telemetry.addData("at speed", globals.launcher.SquidOn ? launchSQUIDF.atSetPoint() : launchPIDF.atSetPoint());
-        telemetry.addData("target", globals.launcher.targetRPM);
+        telemetry.addData("at speed", globals.testing.SquidOn ? launchSQUIDF.atSetPoint() : launchPIDF.atSetPoint());
+        telemetry.addData("target", globals.testing.targetRPM);
         telemetry.addData("rpm", RPM);
         telemetry.addData("power", launchpower);
         telemetry.addData("secsnat", secantRPM);
@@ -116,7 +116,7 @@ public class launcher extends OpMode {
         rpmPacket.put("RPM", RPM);
 
         TelemetryPacket powerPacket = new TelemetryPacket();
-        powerPacket.put("targetRPM", globals.launcher.targetRPM);
+        powerPacket.put("targetRPM", globals.testing.targetRPM);
 
         FtcDashboard.getInstance().sendTelemetryPacket(powerPacket);
         FtcDashboard.getInstance().sendTelemetryPacket(rpmPacket);
