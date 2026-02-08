@@ -24,11 +24,11 @@ public class globals {
     @Config
     public static class kalman {
 
-        // Starting uncertainty (variance) in odometry estimate, in inches^2
+        // Starting uncertainty (covariance) in odometry estimate, in inches^2
         public static double pX0 = 0.001;
         public static double pY0 = 0.001;
 
-        // How much uncertainty (variance) odometry you add each update loop, in inches^2 per loop
+        // How much uncertainty (covariance) in odometry you add each update loop, in inches^2 per loop
         public static double qX = 1;
         public static double qY = 1;
 
