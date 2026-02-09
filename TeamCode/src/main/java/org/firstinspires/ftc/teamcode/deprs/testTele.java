@@ -18,6 +18,8 @@ import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 import com.skeletonarmy.marrow.zones.Point;
 import com.skeletonarmy.marrow.zones.PolygonZone;
 
+import java.util.Objects;
+
 @TeleOp (name = "testTele")
 public class    testTele extends OpMode {
     private final PolygonZone closeLaunchZone = new PolygonZone(new Point(144, 144), new Point(72, 72), new Point(0, 144));
@@ -81,8 +83,8 @@ public class    testTele extends OpMode {
         launchPIDF.setPID(globals.launcher.p, globals.launcher.i, globals.launcher.d);
         follower.update();
         RPM();
-        if (g1.getButton(GamepadKeys.Button.CROSS)) {
-            hood.set(hoodAngle);
+        if (g1.getButton(GamepadKeys.Button.CROSS) && targetRPM > 0) {
+            hood.set(hoodClamp(hoodAngle));
             launchPIDF.setSetPoint(targetRPM);
             launchpower = launchPIDF.calculate(RPM);
             launch = true;
@@ -97,9 +99,13 @@ public class    testTele extends OpMode {
 
 
             if (launchPIDF.atSetPoint()) {
-
-                intake.set(.6);
-                transfer.set(0.6);
+                if (Objects.equals(robotLocation, "Far Zone")) {
+                    intake.set(.6);
+                    transfer.set(0.6);
+                } else {
+                    intake.set(0.8);
+                    transfer.set(0.8);
+                }
             }
         } else {
             launch1.set(0);
@@ -209,6 +215,15 @@ public class    testTele extends OpMode {
         double diff = wrap360(targetangle) - wrap360(currentheading);
         diff = (diff + 540.0) % 360.0 - 180.0;
         return diff;
+    }
+
+    private double hoodClamp(double ang) {
+        if (ang < 40) {
+            ang = 40;
+        } else if (ang > 240) {
+            ang = 240;
+        }
+        return ang;
     }
 
 
