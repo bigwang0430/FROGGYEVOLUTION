@@ -1,11 +1,15 @@
 package org.firstinspires.ftc.teamcode.deprs;
 
+import static java.lang.Thread.sleep;
+
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.math.Vector;
+import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.util.ElapsedTime;
 import com.seattlesolvers.solverslib.controller.PIDController;
 import com.seattlesolvers.solverslib.gamepad.GamepadEx;
 import com.seattlesolvers.solverslib.gamepad.GamepadKeys;
@@ -39,8 +43,12 @@ public class    testTele extends OpMode {
     private boolean launch, zoom;
     private double targetRPM, hoodAngle, tangentVelocity, normalVelocity;
     private String robotLocation;
+    private ElapsedTime timer = new ElapsedTime();
     @Override
     public void init() {
+        timer.startTime();
+        GoBildaPinpointDriver pinpoint = hardwareMap.get(GoBildaPinpointDriver.class, "pinpoint");
+        pinpoint.resetPosAndIMU();
 
         turret = new ServoEx(hardwareMap, "t2", 360, AngleUnit.DEGREES);
 
@@ -70,6 +78,10 @@ public class    testTele extends OpMode {
         follower = Constants.createFollower(hardwareMap);
         follower.startTeleopDrive(true);
         follower.setStartingPose(new Pose(16, 75, Math.PI/2)); //TEMPORARY
+        while (timer.seconds() < 0.5) {
+            telemetry.addData("timer", timer.seconds());
+            telemetry.update();
+        }
     }
 
     @Override
@@ -142,7 +154,8 @@ public class    testTele extends OpMode {
         FtcDashboard.getInstance().sendTelemetryPacket(rpmPacket);
         launchCalc();
         velocityCalculation();
-
+        telemetry.addData("loop time", timer.seconds());
+        timer.reset();
 
     }
 
