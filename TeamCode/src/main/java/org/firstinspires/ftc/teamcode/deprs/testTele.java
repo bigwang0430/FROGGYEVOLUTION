@@ -99,6 +99,7 @@ public class    testTele extends OpMode {
 
 
             if (launchPIDF.atSetPoint()) {
+                //gate.set(globals.gate.open);
                 if (Objects.equals(robotLocation, "Far Zone")) {
                     intake.set(.6);
                     transfer.set(0.6);
@@ -116,6 +117,7 @@ public class    testTele extends OpMode {
         if (!launch && g1.getButton(GamepadKeys.Button.TRIANGLE)) {
             intake.set(0.7);
             transfer.set(0.2);
+            //gate.set(globals.gate.close);
             zoom = true;
         } else if (!launch && !g1.getButton(GamepadKeys.Button.TRIANGLE)) {
             intake.set(0);
@@ -189,9 +191,6 @@ public class    testTele extends OpMode {
         double angleToGoal = Math.atan2(dy, dx);
 
         Vector VelocityVector = follower.getVelocity();
-
-
-
 
         double netVelocityMagnitude = VelocityVector.getMagnitude();
         double angle = Math.PI - VelocityVector.getTheta();
