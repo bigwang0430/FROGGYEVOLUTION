@@ -36,8 +36,8 @@ public class launcher extends OpMode {
     private SquIDFController launchSQUIDF = new SquIDFController(globals.launcher.squP, globals.launcher.squI, globals.launcher.squD, globals.launcher.squKv * globals.testing.targetRPM + globals.launcher.squKs);
     @Override
     public void init() {
-        launch1 = new Motor(hardwareMap, "launch1", 28, 6000);
-        launch2 = new Motor(hardwareMap, "launch2", 28, 6000);
+        launch1 = new Motor(hardwareMap, "l1", 28, 6000);
+        launch2 = new Motor(hardwareMap, "l2", 28, 6000);
         launch1.setRunMode(Motor.RunMode.RawPower);
         launch2.setRunMode(Motor.RunMode.RawPower);
         launch2.setInverted(true);
@@ -45,13 +45,15 @@ public class launcher extends OpMode {
         launch1.setZeroPowerBehavior(Motor.ZeroPowerBehavior.FLOAT);
         launch2.setZeroPowerBehavior(Motor.ZeroPowerBehavior.FLOAT);
 
-        intake = new Motor(hardwareMap, "spindexer");
-        transfer = new Motor(hardwareMap, "intake");
+        intake = new Motor(hardwareMap, "intake");
+        transfer = new Motor(hardwareMap, "transfer");
         intake.setRunMode(Motor.RunMode.RawPower);
         transfer.setRunMode(Motor.RunMode.RawPower);
         intake.setZeroPowerBehavior(Motor.ZeroPowerBehavior.FLOAT);
         transfer.setZeroPowerBehavior(Motor.ZeroPowerBehavior.FLOAT);
-        t1 = new ServoEx(hardwareMap, "t1", 360, AngleUnit.DEGREES);
+        transfer.setInverted(true);
+        intake.setInverted(false);
+        t1 = new ServoEx(hardwareMap, "t2", 360, AngleUnit.DEGREES);
         t1.set(180);
 
         hood = new ServoEx(hardwareMap, "hood", 300, AngleUnit.DEGREES);

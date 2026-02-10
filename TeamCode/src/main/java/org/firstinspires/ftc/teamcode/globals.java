@@ -7,7 +7,7 @@ public class globals {
     public static class launcher {
 
 
-        public static float p =0.0001F; //0.001
+        public static float p =0.005F; //0.001
         public static float i = 0.1F;
         public static float d = 0F;
         public static float ks = 0.001F; //0.0000216
@@ -17,14 +17,14 @@ public class globals {
         public static float squD = 0F;
         public static float squKs = 0F;
         public static float squKv = 0F;
-        public static float velTime = 1.2F;
-        public static float turretOffset = 20F;
+        public static float velTime = 0.5F;
+        public static float turretOffset = -10F;
     }
 
     @Config
     public static class testing {
         public static float targetRPM = 3000F;
-        public static float hoodAng = 60F;
+        public static float hoodAng = 100F;
         public static boolean SquidOn = false;
         public static boolean launcherOn = false;
         public static float turretAng = 0F;

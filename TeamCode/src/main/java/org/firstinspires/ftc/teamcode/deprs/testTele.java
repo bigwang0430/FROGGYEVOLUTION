@@ -125,11 +125,11 @@ public class    testTele extends OpMode {
             if (launchPIDF.atSetPoint() && !robotLocation.equals("No Zone")) {
                 gate.set(globals.gate.open);
                 if (Objects.equals(robotLocation, "Far Zone")) {
-                    intake.set(.55);
-                    transfer.set(0.55);
+                    intake.set(.65);
+                    transfer.set(0.65);
                 } else {
-                    intake.set(0.8);
-                    transfer.set(0.8);
+                    intake.set(0.85);
+                    transfer.set(0.85);
                 }
             }
         } else {
@@ -192,30 +192,33 @@ public class    testTele extends OpMode {
 
         switch (currentLaunchMode) {
             case SOTM:
-                Pose stationaryGoal = new Pose(0, 144);
+                Pose stationaryGoal = new Pose(4, 138);
                 dist = stationaryGoal.minus(robot).getAsVector().getMagnitude();
-                double vel = follower.getVelocity().getMagnitude() * globals.launcher.velTime;
 
-                double distanceDiff = vel * (0.0025 * dist + 0.3871);
-                Vector robotVelocity = new Vector (distanceDiff, follower.getVelocity().getTheta());
+                double accelMag = Math.floor(follower.getAcceleration().getMagnitude());
+                double accelAngle = Math.toRadians(Math.floor(Math.toDegrees(follower.getAcceleration().getTheta())));
+                Vector accel = new Vector(accelMag, accelAngle);
+                Vector velocity = follower.getVelocity().plus(new Vector(accel.getMagnitude() * globals.launcher.velTime, accel.getTheta()));
+                double distanceDiff = velocity.getMagnitude() * (0.0025 * dist + 0.3871);
+                Vector robotVelocity = new Vector (distanceDiff, velocity.getTheta());
 
-                Pose newGoal = new Pose(-robotVelocity.getXComponent() + 0, -robotVelocity.getYComponent() + 144);
+                Pose newGoal = new Pose(-robotVelocity.getXComponent() + stationaryGoal.getX(), -robotVelocity.getYComponent() + stationaryGoal.getY());
 
                 double newGoalAngle = Math.atan2(newGoal.getY() - y, newGoal.getX()-x);
-                turretAng = Math.toDegrees(follower.getHeading() - newGoalAngle);
+                turretAng = Math.toDegrees(AngleUnit.normalizeRadians(follower.getHeading() - newGoalAngle));
                 dist = newGoal.minus(robot).getAsVector().getMagnitude();
                 telemetry.addData("turretAng", turretAng);
                 telemetry.addData("ang", newGoalAngle);
                 break;
             case normal:
-                Pose goal = new Pose(0, 144);
+                Pose goal = new Pose(4, 138);
                 Pose target = goal.minus(robot);
                 Vector robotToGoal = target.getAsVector();
-                double goalAngle = Math.atan2(144 - y, -x);
-                turretAng = Math.toDegrees(follower.getHeading() - goalAngle);
+                double goalAngle = Math.atan2(goal.getY() - y, goal.getX()-x);
+                turretAng = Math.toDegrees(AngleUnit.normalizeRadians(follower.getHeading() - goalAngle));
                 dist = robotToGoal.getMagnitude();
                 telemetry.addData("turretAng", turretAng);
-                telemetry.addData("roo", wrap(follower.getHeading()));
+                telemetry.addData("roo", follower.getHeading());
                 telemetry.addData("ang", goalAngle);
                 telemetry.addData("calc dist", dist);
                 break;
