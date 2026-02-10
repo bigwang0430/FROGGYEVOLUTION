@@ -117,13 +117,12 @@ public class    testTele extends OpMode {
                 launch1.set(0.4);
                 launch2.set(0.4);
             } else {
-
                 launch1.set(launchpower + globals.launcher.kv * targetRPM + globals.launcher.ks);
                 launch2.set(launchpower + globals.launcher.kv * targetRPM + globals.launcher.ks);
             }
 
 
-            if (launchPIDF.atSetPoint()) {
+            if (launchPIDF.atSetPoint() && !robotLocation.equals("No Zone")) {
                 gate.set(globals.gate.open);
                 if (Objects.equals(robotLocation, "Far Zone")) {
                     intake.set(.55);
@@ -132,9 +131,6 @@ public class    testTele extends OpMode {
                     intake.set(0.8);
                     transfer.set(0.8);
                 }
-            } else {
-                intake.set(0);
-                transfer.set(0);
             }
         } else {
             launch1.set(0);
@@ -171,6 +167,7 @@ public class    testTele extends OpMode {
         launchCalc();
         velocityCalculation();
         telemetry.addData("loop time", timer.seconds());
+        telemetry.addData("heading", Math.toDegrees(follower.getPose().getHeading()));
         timer.reset();
 
     }
@@ -204,11 +201,11 @@ public class    testTele extends OpMode {
 
                 Pose newGoal = new Pose(-robotVelocity.getXComponent() + 0, -robotVelocity.getYComponent() + 144);
 
-                double newgoalAngle = Math.atan2(newGoal.getY() - y, newGoal.getX()-x);
-                turretAng = Math.toDegrees(wrap(follower.getHeading()) - newgoalAngle);
+                double newGoalAngle = Math.atan2(newGoal.getY() - y, newGoal.getX()-x);
+                turretAng = Math.toDegrees(wrap(follower.getHeading()) - newGoalAngle);
                 dist = newGoal.minus(robot).getAsVector().getMagnitude();
                 telemetry.addData("turretAng", turretAng);
-                telemetry.addData("ang", newgoalAngle);
+                telemetry.addData("ang", newGoalAngle);
                 break;
             case normal:
                 Pose goal = new Pose(0, 144);
@@ -226,15 +223,17 @@ public class    testTele extends OpMode {
         }
         if (robotZone.isInside(closeLaunchZone)) {
             targetRPM = 2414.2 * Math.exp(0.0036 * dist);
-            hoodAngle = 147.8 * Math.log(dist) - 441.52;
+            if (dist < 24) {
+                hoodAngle = 40;
+            } else {
+                hoodAngle = 147.8 * Math.log(dist) - 441.52;
+            }
             robotLocation = "Close Zone";
         } else if (robotZone.isInside(farLaunchZone)) {
             targetRPM = 13.09 * dist + 2164.9;
             hoodAngle = 240;
             robotLocation = "Far Zone";
         } else {
-            targetRPM = 0;
-            hoodAngle = 70;
             robotLocation = "No Zone";
         }
 

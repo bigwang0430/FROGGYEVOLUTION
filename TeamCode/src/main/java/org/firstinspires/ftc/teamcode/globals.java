@@ -7,7 +7,7 @@ public class globals {
     public static class launcher {
 
 
-        public static float p =0.00005F; //0.001
+        public static float p =0.0001F; //0.001
         public static float i = 0.1F;
         public static float d = 0F;
         public static float ks = 0.001F; //0.0000216
@@ -18,7 +18,7 @@ public class globals {
         public static float squKs = 0F;
         public static float squKv = 0F;
         public static float velTime = 1.2F;
-        public static float turretOffset = 25F;
+        public static float turretOffset = 20F;
     }
 
     @Config
