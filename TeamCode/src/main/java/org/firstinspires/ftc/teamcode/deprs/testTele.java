@@ -126,12 +126,15 @@ public class    testTele extends OpMode {
             if (launchPIDF.atSetPoint()) {
                 gate.set(globals.gate.open);
                 if (Objects.equals(robotLocation, "Far Zone")) {
-                    intake.set(.6);
-                    transfer.set(0.6);
+                    intake.set(.55);
+                    transfer.set(0.55);
                 } else {
                     intake.set(0.8);
                     transfer.set(0.8);
                 }
+            } else {
+                intake.set(0);
+                transfer.set(0);
             }
         } else {
             launch1.set(0);

@@ -18,7 +18,7 @@ public class globals {
         public static float squKs = 0F;
         public static float squKv = 0F;
         public static float velTime = 1.2F;
-        public static float turretOffset = 5F;
+        public static float turretOffset = 25F;
     }
 
     @Config
