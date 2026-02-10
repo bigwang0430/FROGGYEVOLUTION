@@ -78,7 +78,7 @@ public class    testTele extends OpMode {
         intake.setRunMode(Motor.RunMode.RawPower);
         transfer.setRunMode(Motor.RunMode.RawPower);
         transfer.setInverted(true);
-        intake.setInverted(true);
+        intake.setInverted(false);
         intake.setZeroPowerBehavior(Motor.ZeroPowerBehavior.FLOAT);
         transfer.setZeroPowerBehavior(Motor.ZeroPowerBehavior.FLOAT);
 
@@ -202,7 +202,7 @@ public class    testTele extends OpMode {
                 Pose newGoal = new Pose(-robotVelocity.getXComponent() + 0, -robotVelocity.getYComponent() + 144);
 
                 double newGoalAngle = Math.atan2(newGoal.getY() - y, newGoal.getX()-x);
-                turretAng = Math.toDegrees(wrap(follower.getHeading()) - newGoalAngle);
+                turretAng = Math.toDegrees(follower.getHeading() - newGoalAngle);
                 dist = newGoal.minus(robot).getAsVector().getMagnitude();
                 telemetry.addData("turretAng", turretAng);
                 telemetry.addData("ang", newGoalAngle);
@@ -212,10 +212,10 @@ public class    testTele extends OpMode {
                 Pose target = goal.minus(robot);
                 Vector robotToGoal = target.getAsVector();
                 double goalAngle = Math.atan2(144 - y, -x);
-                turretAng = Math.toDegrees(wrap(follower.getHeading()) - goalAngle);
+                turretAng = Math.toDegrees(follower.getHeading() - goalAngle);
                 dist = robotToGoal.getMagnitude();
                 telemetry.addData("turretAng", turretAng);
-                telemetry.addData("roo", follower.getHeading());
+                telemetry.addData("roo", wrap(follower.getHeading()));
                 telemetry.addData("ang", goalAngle);
                 telemetry.addData("calc dist", dist);
                 break;
