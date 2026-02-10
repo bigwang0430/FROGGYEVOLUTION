@@ -1,5 +1,8 @@
 package org.firstinspires.ftc.teamcode.deprs;
 
+import static java.lang.Math.PI;
+import static java.lang.Math.atan;
+import static java.lang.Math.atan2;
 import static java.lang.Thread.sleep;
 
 import com.acmerobotics.dashboard.FtcDashboard;
@@ -37,13 +40,20 @@ public class    testTele extends OpMode {
     private double lastTime;
 
     private double launchpower;
-    private double RPM, previousRPM;
-    private ServoEx hood, turret;
+    private double RPM, previousRPM, dist, turretAng;
+    private ServoEx hood, turret, gate;
     private PIDController launchPIDF = new PIDController(globals.launcher.p, globals.launcher.i, globals.launcher.d);
     private boolean launch, zoom;
     private double targetRPM, hoodAngle, tangentVelocity, normalVelocity;
     private String robotLocation;
     private ElapsedTime timer = new ElapsedTime();
+    private String turretState = "Valid";
+    //valid, aligned, invalid, notAligned
+
+    private enum launchMode {
+        SOTM,
+        normal
+    } private launchMode currentLaunchMode = launchMode.normal;
     @Override
     public void init() {
         timer.startTime();
@@ -51,7 +61,7 @@ public class    testTele extends OpMode {
         pinpoint.resetPosAndIMU();
 
         turret = new ServoEx(hardwareMap, "t2", 360, AngleUnit.DEGREES);
-
+        turret.setInverted(true);
         launch1 = new Motor(hardwareMap, "l1", 28, 6000);
         launch2 = new Motor(hardwareMap, "l2", 28, 6000);
         launch1.setRunMode(Motor.RunMode.RawPower);
@@ -61,6 +71,8 @@ public class    testTele extends OpMode {
         launch1.setZeroPowerBehavior(Motor.ZeroPowerBehavior.FLOAT);
         launch2.setZeroPowerBehavior(Motor.ZeroPowerBehavior.FLOAT);
 
+        gate = new ServoEx(hardwareMap, "gate");
+        gate.set(globals.gate.close);
         intake = new Motor(hardwareMap, "intake");
         transfer = new Motor(hardwareMap, "transfer");
         intake.setRunMode(Motor.RunMode.RawPower);
@@ -86,6 +98,7 @@ public class    testTele extends OpMode {
 
     @Override
     public void loop() {
+        follower.setMaxPower(0.8);
         if (previousRPM - RPM > 300) {
             double dip = previousRPM;
             telemetry.addData("niga", dip);
@@ -111,7 +124,7 @@ public class    testTele extends OpMode {
 
 
             if (launchPIDF.atSetPoint()) {
-                //gate.set(globals.gate.open);
+                gate.set(globals.gate.open);
                 if (Objects.equals(robotLocation, "Far Zone")) {
                     intake.set(.6);
                     transfer.set(0.6);
@@ -129,7 +142,7 @@ public class    testTele extends OpMode {
         if (!launch && g1.getButton(GamepadKeys.Button.TRIANGLE)) {
             intake.set(0.7);
             transfer.set(0.2);
-            //gate.set(globals.gate.close);
+            gate.set(globals.gate.close);
             zoom = true;
         } else if (!launch && !g1.getButton(GamepadKeys.Button.TRIANGLE)) {
             intake.set(0);
@@ -160,11 +173,54 @@ public class    testTele extends OpMode {
     }
 
     private void launchCalc() {
-        double dist = Math.pow(Math.pow(follower.getPose().getX() , 2) + Math.pow(144 - follower.getPose().getY(), 2), 0.5);
-        double xpos = follower.getPose().getX();
-        double ypos = follower.getPose().getY();
-        robotZone.setPosition(xpos, ypos);
+
+        double x = follower.getPose().getX();
+        double y = follower.getPose().getY();
+        Pose robot = new Pose(x, y);
+        robotZone.setPosition(x, y);
         robotZone.setRotation(follower.getPose().getHeading());
+        if (follower.getVelocity().getMagnitude() < 5 || robotLocation.equals("Far Zone")) {
+            currentLaunchMode = launchMode.normal;
+        } else {
+            currentLaunchMode = launchMode.SOTM;
+        }
+
+
+
+
+
+
+        switch (currentLaunchMode) {
+            case SOTM:
+                Pose stationaryGoal = new Pose(0, 144);
+                dist = stationaryGoal.minus(robot).getAsVector().getMagnitude();
+                double vel = follower.getVelocity().getMagnitude() * globals.launcher.velTime;
+
+                double distanceDiff = vel * (0.0025 * dist + 0.3871);
+                Vector robotVelocity = new Vector (distanceDiff, follower.getVelocity().getTheta());
+
+                Pose newGoal = new Pose(-robotVelocity.getXComponent() + 0, -robotVelocity.getYComponent() + 144);
+
+                double newgoalAngle = Math.atan2(newGoal.getY() - y, newGoal.getX()-x);
+                turretAng = Math.toDegrees(wrap(follower.getHeading()) - newgoalAngle);
+                dist = newGoal.minus(robot).getAsVector().getMagnitude();
+                telemetry.addData("turretAng", turretAng);
+                telemetry.addData("ang", newgoalAngle);
+                break;
+            case normal:
+                Pose goal = new Pose(0, 144);
+                Pose target = goal.minus(robot);
+                Vector robotToGoal = target.getAsVector();
+                double goalAngle = Math.atan2(144 - y, -x);
+                turretAng = Math.toDegrees(wrap(follower.getHeading()) - goalAngle);
+                dist = robotToGoal.getMagnitude();
+                telemetry.addData("turretAng", turretAng);
+                telemetry.addData("roo", follower.getHeading());
+                telemetry.addData("ang", goalAngle);
+                telemetry.addData("calc dist", dist);
+                break;
+
+        }
         if (robotZone.isInside(closeLaunchZone)) {
             targetRPM = 2414.2 * Math.exp(0.0036 * dist);
             hoodAngle = 147.8 * Math.log(dist) - 441.52;
@@ -179,19 +235,25 @@ public class    testTele extends OpMode {
             robotLocation = "No Zone";
         }
 
-        double x = follower.getPose().getX();
-        double y = follower.getPose().getY();
 
-        double currentheading = wrap360(Math.toDegrees(follower.getPose().getHeading()));
-        double targetangle = wrap360(Math.toDegrees(Math.atan2(144.0 - y, 0.0 - x)));
-        double relDeg = shortestDiffDeg(targetangle, currentheading);
-        double relativeangle = wrap360(180.0 + relDeg);
 
-        if (relativeangle < 5) relativeangle = 180.0;
-        if (relativeangle > 355) relativeangle = 180.0;
+        if (Math.abs(turretAng) > 130) {
+            turretAng = 0;
+        }
 
-        turret.set(relativeangle);
+        turret.set(clampTurret(turretAng));
+    }
+    private double wrap(double angle) {
+        if (angle < 0) {
+            angle =  2*Math.PI + angle;
+        }
+        return angle;
+    }
 
+    private double clampTurret(double ang) {
+
+            ang = 180 - ((ang * 3) / 2) - globals.launcher.turretOffset;
+            return ang;
     }
     private void velocityCalculation() {
 
@@ -217,16 +279,6 @@ public class    testTele extends OpMode {
 
         telemetry.addData("Tangent Vel (m/s)", tangentVelocity);
         telemetry.addData("Normal Vel (m/s)", normalVelocity);
-    }
-    private double wrap360(double deg) {
-        deg %= 360.0;
-        if (deg < 0) deg += 360.0;
-        return deg;
-    }
-    private double shortestDiffDeg(double targetangle, double currentheading) {
-        double diff = wrap360(targetangle) - wrap360(currentheading);
-        diff = (diff + 540.0) % 360.0 - 180.0;
-        return diff;
     }
 
     private double hoodClamp(double ang) {

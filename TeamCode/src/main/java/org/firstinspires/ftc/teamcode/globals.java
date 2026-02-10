@@ -17,7 +17,8 @@ public class globals {
         public static float squD = 0F;
         public static float squKs = 0F;
         public static float squKv = 0F;
-
+        public static float velTime = 1.2F;
+        public static float turretOffset = 5F;
     }
 
     @Config
@@ -42,5 +43,11 @@ public class globals {
         // Camera measurement noise (variance), in inches^2
         public static double rX = 4;
         public static double rY = 4;
+    }
+
+    @Config
+    public static class gate {
+        public static float close = 0.25F; //
+        public static float open = 0.5F;
     }
 }
