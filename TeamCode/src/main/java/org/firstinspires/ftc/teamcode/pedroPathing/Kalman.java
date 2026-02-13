@@ -66,8 +66,7 @@ public class Kalman extends CommandOpMode {
         double xPred = odo.getX(), yPred = odo.getY(), hPred = odo.getHeading();
         double pXPred = pX + globals.kalman.qX;
         double pYPred = pY + globals.kalman.qY;
-        double pHPred = pH;
-
+        double pHPred = pH + globals.kalman.qH;
 
         // no measurement = keep position
         xEst = xPred; yEst = yPred; hEst = hPred;
@@ -80,15 +79,28 @@ public class Kalman extends CommandOpMode {
                 double zX = 72 + (bot.getPosition().y * M_TO_IN);
                 double zY = 72 - (bot.getPosition().x * M_TO_IN);
 
+                // Limelight heading: convert degrees -> radians
+                double zH = -Math.toRadians(bot.getOrientation().getYaw());
 
                 double kX = pXPred / (pXPred + globals.kalman.rX);
                 double kY = pYPred / (pYPred + globals.kalman.rY);
+                double kH = pHPred / (pHPred + globals.kalman.rH);
 
                 xEst = xPred + kX * (zX - xPred);
                 yEst = yPred + kY * (zY - yPred);
 
+                // heading kalman (with wrap to [-pi, pi) so it doesn't jump near +/-pi)
+                double errH = zH - hPred;
+                while (errH >= Math.PI) errH -= 2.0 * Math.PI;
+                while (errH < -Math.PI) errH += 2.0 * Math.PI;
+
+                hEst = hPred + kH * errH;
+                while (hEst >= Math.PI) hEst -= 2.0 * Math.PI;
+                while (hEst < -Math.PI) hEst += 2.0 * Math.PI;
+
                 pX = (1.0 - kX) * pXPred;
                 pY = (1.0 - kY) * pYPred;
+                pH = (1.0 - kH) * pHPred;
             }
         }
 
@@ -116,6 +128,7 @@ public class Kalman extends CommandOpMode {
         updateKalman();
         telemetry.addData("ODO X", odoPose.getX());
         telemetry.addData("ODO Y", odoPose.getY());
+        telemetry.addData("ODO H", odoPose.getHeading()); // added
 
         LLResult r = limelight.getLatestResult();
         if (r != null && r.isValid()) {
@@ -123,16 +136,18 @@ public class Kalman extends CommandOpMode {
             if (bot != null) {
                 telemetry.addData("LL X", 72 + (bot.getPosition().y * M_TO_IN)); // keep LL x convention
                 telemetry.addData("LL Y", 72 - (bot.getPosition().x * M_TO_IN)); // flipped direction
-
+                double zH = -Math.toRadians(bot.getOrientation().getYaw());
+                telemetry.addData("LL H", zH);
             }
         }
 
-
         telemetry.addData("KAL X", fusedPose.getX());
         telemetry.addData("KAL Y", fusedPose.getY());
+        telemetry.addData("KAL H", fusedPose.getHeading()); // added
 
         telemetry.addData("pX", pX);
         telemetry.addData("pY", pY);
+        telemetry.addData("pH", pH); // optional but useful (kept consistent with adding heading)
         telemetry.addData("NAN", isNAN());
         telemetry.update();
     }
