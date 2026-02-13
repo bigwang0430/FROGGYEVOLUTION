@@ -80,7 +80,7 @@ public class Kalman extends CommandOpMode {
                 double zY = 72 - (bot.getPosition().x * M_TO_IN);
 
                 // Limelight heading: convert degrees -> radians
-                double zH = -Math.toRadians(bot.getOrientation().getYaw());
+                double zH = Math.toRadians(bot.getOrientation().getYaw());
 
                 double kX = pXPred / (pXPred + globals.kalman.rX);
                 double kY = pYPred / (pYPred + globals.kalman.rY);
@@ -136,7 +136,8 @@ public class Kalman extends CommandOpMode {
             if (bot != null) {
                 telemetry.addData("LL X", 72 + (bot.getPosition().y * M_TO_IN)); // keep LL x convention
                 telemetry.addData("LL Y", 72 - (bot.getPosition().x * M_TO_IN)); // flipped direction
-                double zH = -Math.toRadians(bot.getOrientation().getYaw());
+                double zH = Math.toRadians(bot.getOrientation().getYaw());
+                if (zH < 0) zH += 2 * Math.PI;
                 telemetry.addData("LL H", zH);
             }
         }
